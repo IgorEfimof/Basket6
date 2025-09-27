@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Quick Totals — калькулятор тотала по темпу</title>
+<style>
+  :root{
+    --bg:#0f1720; --card:#111318; --muted:#9aa6b2; --accent:#18a0ff; --good:#16a34a; --bad:#dc2626;
+    --glass: rgba(255,255,255,0.03);
+    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  html,body{height:100%; margin:0; background:
+    linear-gradient(180deg,#081221 0%, #0b1721 60%); color:#e6eef6;}
+  .wrap{max-width:740px; margin:18px auto; padding:18px; box-sizing:border-box;}
+  header{display:flex; gap:12px; align-items:center; margin-bottom:14px;}
+  header h1{font-size:18px;margin:0; color:#bfe8ff;}
+  header p{margin:0; color:var(--muted); font-size:13px;}
+  .card{background:linear-gradient(180deg,var(--card), #0f1113); border-radius:12px; padding:14px; box-shadow:0 8px 30px rgba(2,6,23,0.6); margin-bottom:12px;}
+  label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .row{display:flex; gap:8px; flex-wrap:wrap;}
+  .col{flex:1 1 140px; min-width:140px;}
+  input[type="number"], input[type="text"], select{width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.05); background:var(--glass); color:#e6eef6; font-size:15px; box-sizing:border-box;}
+  .small{font-size:12px; color:var(--muted); margin-top:6px;}
+  .result{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:10px; padding:12px; margin-top:10px;}
+  .big{font-weight:700; font-size:22px; color:#bfe8ff;}
+  .muted{color:var(--muted); font-size:13px;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .btn{padding:10px 12px; border-radius:8px; background:var(--accent); color:#022; border:none; font-weight:600; cursor:pointer;}
+  .btn.secondary{background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--muted);}
+  .scenario{padding:10px; border-radius:8px; background:rgba(255,255,255,0.02);}
+  .positive{color:var(--good); font-weight:700;}
+  .negative{color:var(--bad); font-weight:700;}
+  footer{margin-top:8px; color:var(--muted); font-size:13px;}
+  .inline{display:flex; gap:8px; align-items:center;}
+  input[type="range"]{width:100%;}
+  @media (max-width:520px){
+    .row{flex-direction:column;}
+    .grid{grid-template-columns:1fr;}
+    header{flex-direction:column; align-items:flex-start; gap:4px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Калькулятор ожидаемого тотала по темпу</h1>
+    <p>Быстрый прикид для лайв-решения: сравни свой прогноз с линией букмекера.</p>
+  </header>
+
+  <div class="card">
+    <div class="row">
+      <div class="col">
+        <label>Длина матча (минут)</label>
+        <select id="matchLen">
+          <option value="48">NBA - 48</option>
+          <option value="40">Other - 40</option>
+          <option value="custom">Своя...</option>
+        </select>
+        <input id="customLen" type="number" min="1" step="1" style="display:none;margin-top:8px" placeholder="Введите минуты (напр. 36)" />
+        <div class="small">Обычно NBA 48, прочие лиги 40.</div>
+      </div>
+
+      <div class="col">
+        <label>Прогресс матча</label>
+        <div class="inline">
+          <input id="progressPct" type="number" min="0" max="100" step="0.1" value="30" />
+          <span class="muted">%</span>
+        </div>
+        <div class="small">Можно вводить в % (например 30%)</div>
+      </div>
+
+      <div class="col">
+        <label>Текущий темп (очки / мин)</label>
+        <input id="tempoNow" type="number" step="0.01" value="5.01" />
+      </div>
+
+      <div class="col">
+        <label>Средний темп лиги (очки / мин)</label>
+        <input id="tempoLeague" type="number" step="0.01" value="2.00" />
+      </div>
+    </div>
+
+    <div style="height:10px"></div>
+
+    <div class="row">
+      <div class="col">
+        <label>Вес текущего темпа при прогнозе (регрессия к среднему)</label>
+        <div class="inline">
+          <input id="weight" type="range" min="0" max="100" value="50" />
+          <div style="width:56px; text-align:center;" id="wtLabel">50%</div>
+        </div>
+        <div class="small">0% = полностью лиги, 100% = полностью текущий темп</div>
+      </div>
+
+      <div class="col">
+        <label>Линия букмекера (тотал)</label>
+        <input id="bookLine" type="number" step="0.1" placeholder="Напр. 190" />
+        <div class="small">Оставь пустым, если хочешь только расчёт</div>
+      </div>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <div class="row">
+      <div class="col">
+        <button class="btn" id="calcBtn">Посчитать</button>
+      </div>
+      <div class="col">
+        <button class="btn secondary" id="copyBtn">Скопировать итог</button>
+      </div>
+    </div>
+
+    <div class="result" id="out">
+      <div class="grid">
+        <div class="scenario">
+          <div class="muted">Минут сыграно</div>
+          <div class="big" id="minsPlayed">—</div>
+          <div class="muted" style="margin-top:8px">Очки сейчас</div>
+          <div id="pointsNow" class="big">—</div>
+          <div class="muted" style="margin-top:8px">Минут осталось</div>
+          <div id="minsLeft" class="big">—</div>
+        </div>
+
+        <div class="scenario">
+          <div class="muted">Проекция (оставшиеся минуты × темп)</div>
+          <div class="muted">По текущему темпу</div>
+          <div class="big" id="projNow">—</div>
+          <div class="muted" style="margin-top:8px">По среднему темпу</div>
+          <div class="big" id="projLeague">—</div>
+        </div>
+
+        <div class="scenario">
+          <div class="muted">Ожидаемый тотал (текущий темп)</div>
+          <div class="big" id="expNow">—</div>
+          <div class="muted" style="margin-top:8px">Ожидаемый тотал (лига)</div>
+          <div class="big" id="expLeague">—</div>
+        </div>
+
+        <div class="scenario">
+          <div class="muted">Смешанный прогноз (взвешенный)</div>
+          <div class="big" id="expMixed">—</div>
+          <div class="muted" style="margin-top:8px">Вес текущего темпа</div>
+          <div class="big" id="wtEcho">—</div>
+        </div>
+      </div>
+
+      <div style="height:10px"></div>
+
+      <div id="bookCompare" class="muted">Линия: —</div>
+
+    </div>
+
+    <div style="height:10px"></div>
+    <div class="small">Примечание: если текущая эффективность атаки аномальная (очень высокие % попаданий), обычно имеет смысл смягчать прогноз (двигать ползунок в сторону среднего). Этот калькулятор делает быстрые арифметические прикидки — учитывай тренеров, фолы, замены и усталость при принятии решения.</div>
+  </div>
+
+  <footer>Сделано для быстрой оценки. Ответственность за ставки — на вас.</footer>
+</div>
+
+<script>
+(function(){
+  const matchLen = document.getElementById('matchLen');
+  const customLen = document.getElementById('customLen');
+  const progressPct = document.getElementById('progressPct');
+  const tempoNow = document.getElementById('tempoNow');
+  const tempoLeague = document.getElementById('tempoLeague');
+  const weight = document.getElementById('weight');
+  const wtLabel = document.getElementById('wtLabel');
+  const bookLine = document.getElementById('bookLine');
+
+  const calcBtn = document.getElementById('calcBtn');
+  const copyBtn = document.getElementById('copyBtn');
+
+  const minsPlayedEl = document.getElementById('minsPlayed');
+  const pointsNowEl = document.getElementById('pointsNow');
+  const minsLeftEl = document.getElementById('minsLeft');
+  const projNowEl = document.getElementById('projNow');
+  const projLeagueEl = document.getElementById('projLeague');
+  const expNowEl = document.getElementById('expNow');
+  const expLeagueEl = document.getElementById('expLeague');
+  const expMixedEl = document.getElementById('expMixed');
+  const wtEcho = document.getElementById('wtEcho');
+  const bookCompare = document.getElementById('bookCompare');
+
+  function showCustomToggle(){
+    if(matchLen.value === 'custom'){
+      customLen.style.display = 'block';
+      customLen.value = customLen.value || '';
+    } else customLen.style.display = 'none';
+  }
+  matchLen.addEventListener('change', showCustomToggle);
+
+  weight.addEventListener('input', ()=> wtLabel.textContent = weight.value + '%');
+
+  function num(x){ return Number(x) || 0; }
+
+  function calculate(){
+    // read inputs
+    let totalMinutes = (matchLen.value === 'custom') ? num(customLen.value) : num(matchLen.value);
+    if(totalMinutes <= 0) totalMinutes = 48;
+    let progressPercent = num(progressPct.value);
+    if(progressPercent < 0) progressPercent = 0;
+    if(progressPercent > 100) progressPercent = 100;
+
+    // minutes played
+    const minsPlayed = totalMinutes * (progressPercent/100);
+    const tNow = num(tempoNow.value);
+    const tLeague = num(tempoLeague.value);
+
+    const ptsNow = tNow * minsPlayed;
+    const minsLeft = Math.max(0, totalMinutes - minsPlayed);
+
+    // projections
+    const projNow = tNow * minsLeft;
+    const projLeague = tLeague * minsLeft;
+
+    // expected totals
+    const expNow = ptsNow + projNow;
+    const expLeague = ptsNow + projLeague;
+
+    // mixed (weighted)
+    const w = num(weight.value)/100;
+    const mixedTempo = tNow * w + tLeague * (1 - w);
+    const projMixed = mixedTempo * minsLeft;
+    const expMixed = ptsNow + projMixed;
+
+    // display (rounded to 1 decimal)
+    function r(x){ return Math.round(x*10)/10; }
+
+    minsPlayedEl.textContent = r(minsPlayed) + ' мин';
+    pointsNowEl.textContent = r(ptsNow) + ' очк';
+    minsLeftEl.textContent = r(minsLeft) + ' мин';
+
+    projNowEl.textContent = r(projNow);
+    projLeagueEl.textContent = r(projLeague);
+
+    expNowEl.textContent = r(expNow);
+    expLeagueEl.textContent = r(expLeague);
+    expMixedEl.textContent = r(expMixed);
+    wtEcho.textContent = Math.round(w*100) + '% (темп=' + r(mixedTempo) + ')';
+
+    // compare with bookmaker line if given
+    const line = num(bookLine.value);
+    if(line > 0){
+      const diff = r(expMixed - line);
+      let verdict = '';
+      if(Math.abs(diff) < 2){
+        verdict = `Линия ${line}. По смешанному прогнозу ≈ ${r(expMixed)} (≈ совпадает, разница ${diff}).`;
+      } else if(diff > 0){
+        verdict = `Линия ${line}. По смешанному прогнозу ≈ ${r(expMixed)} — есть ценность на ТБ (ожидается +${diff} очк).`;
+      } else {
+        verdict = `Линия ${line}. По смешанному прогнозу ≈ ${r(expMixed)} — есть ценность на ТМ (ожидается ${diff} очк ниже).`;
+      }
+      bookCompare.textContent = verdict;
+      // color hint
+      if(diff >= 3) bookCompare.style.color = 'var(--good)';
+      else if(diff <= -3) bookCompare.style.color = 'var(--bad)';
+      else bookCompare.style.color = 'var(--muted)';
+    } else {
+      bookCompare.textContent = 'Линия: не указана. Введите линию букмекера, чтобы получить подсказку.';
+      bookCompare.style.color = 'var(--muted)';
+    }
+
+    // return a small summary text for copying
+    return `Минут сыграно: ${r(minsPlayed)}; Очки сейчас: ${r(ptsNow)}; Минут осталось: ${r(minsLeft)}.
+Ожидаемый тотал (смешанный): ${r(expMixed)}; (текущий:${r(expNow)}, лига:${r(expLeague)}).
+Линия букмекера: ${line>0?line:'—'}. Разница (mixed - line): ${line>0? r(expMixed-line) : '—'}.`;
+  }
+
+  calcBtn.addEventListener('click', ()=>{
+    calculate();
+  });
+
+  copyBtn.addEventListener('click', async ()=>{
+    const text = calculate();
+    try{
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = 'Скопировано!';
+      setTimeout(()=> copyBtn.textContent = 'Скопировать итог', 1400);
+    }catch(e){
+      copyBtn.textContent = 'Не удалось';
+      setTimeout(()=> copyBtn.textContent = 'Скопировать итог', 1400);
+    }
+  });
+
+  // initial compute
+  showCustomToggle();
+  calculate();
+
+  // live recalc when inputs change (small debounce)
+  let tmr;
+  ['input','change'].forEach(ev=>{
+    document.querySelectorAll('input,select').forEach(el=>{
+      el.addEventListener(ev, ()=> {
+        clearTimeout(tmr);
+        tmr = setTimeout(calculate, 200);
+      });
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
