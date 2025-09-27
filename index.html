@@ -2,105 +2,115 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Quick Totals — калькулятор тотала по темпу</title>
 <style>
   :root{
-    --bg:#0f1720; --card:#111318; --muted:#9aa6b2; --accent:#18a0ff; --good:#16a34a; --bad:#dc2626;
+    --bg: #0f1720; --card: #111318; --muted: #9aa6b2; --accent: #18a0ff; --good: #16a34a; --bad: #dc2626;
     --glass: rgba(255,255,255,0.03);
-    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  html,body{height:100%; margin:0; background:
-    linear-gradient(180deg,#081221 0%, #0b1721 60%); color:#e6eef6;}
-  .wrap{max-width:740px; margin:18px auto; padding:18px; box-sizing:border-box;}
-  header{display:flex; gap:12px; align-items:center; margin-bottom:14px;}
-  header h1{font-size:18px;margin:0; color:#bfe8ff;}
-  header p{margin:0; color:var(--muted); font-size:13px;}
-  .card{background:linear-gradient(180deg,var(--card), #0f1113); border-radius:12px; padding:14px; box-shadow:0 8px 30px rgba(2,6,23,0.6); margin-bottom:12px;}
-  label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
-  .row{display:flex; gap:8px; flex-wrap:wrap;}
-  .col{flex:1 1 140px; min-width:140px;}
-  input[type="number"], input[type="text"], select{width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.05); background:var(--glass); color:#e6eef6; font-size:15px; box-sizing:border-box;}
-  .small{font-size:12px; color:var(--muted); margin-top:6px;}
-  .result{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:10px; padding:12px; margin-top:10px;}
-  .big{font-weight:700; font-size:22px; color:#bfe8ff;}
-  .muted{color:var(--muted); font-size:13px;}
-  .grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-  .btn{padding:10px 12px; border-radius:8px; background:var(--accent); color:#022; border:none; font-weight:600; cursor:pointer;}
-  .btn.secondary{background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--muted);}
-  .scenario{padding:10px; border-radius:8px; background:rgba(255,255,255,0.02);}
+  .light-theme{
+    --bg: #f5f5f5; --card: #ffffff; --muted: #6b7280; --accent: #3b82f6; --good: #10b981; --bad: #ef4444;
+    --glass: rgba(0,0,0,0.03);
+    color: #1f2937;
+  }
+  html,body{height:100%; margin:0; background: var(--bg); color: var(--bg) == #f5f5f5 ? #1f2937 : #e6eef6; transition: background 0.3s;}
+  .wrap{max-width:100%; margin:0 auto; padding:12px; box-sizing:border-box;}
+  header{display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;}
+  header h1{font-size:18px;margin:0; color:var(--accent); flex:1;}
+  header p{margin:0; color:var(--muted); font-size:12px; width:100%;}
+  .theme-toggle{background:var(--accent); color:white; border:none; border-radius:20px; padding:6px 12px; font-size:12px; cursor:pointer;}
+  .card{background:var(--card); border-radius:10px; padding:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); margin-bottom:10px;}
+  label{font-size:13px; color:var(--muted); display:block; margin-bottom:4px;}
+  .row{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;}
+  .col{flex:1 1 calc(50% - 6px); min-width:0; box-sizing:border-box;}
+  .full-width{flex:1 1 100%;}
+  input[type="number"], input[type="text"], select{
+    width:100%; padding:10px; border-radius:6px; border:1px solid rgba(0,0,0,0.1); 
+    background:var(--glass); color:inherit; font-size:16px; box-sizing:border-box;
+    -webkit-appearance: none; appearance: none;
+  }
+  .small{font-size:11px; color:var(--muted); margin-top:4px;}
+  .result{background:var(--glass); border-radius:8px; padding:10px; margin-top:8px;}
+  .big{font-weight:700; font-size:18px; color:var(--accent);}
+  .muted{color:var(--muted); font-size:12px;}
+  .grid{display:grid; grid-template-columns:1fr; gap:8px;}
+  .btn{padding:10px; border-radius:6px; background:var(--accent); color:white; border:none; font-weight:600; cursor:pointer; width:100%; margin-bottom:6px;}
+  .btn.secondary{background:transparent; border:1px solid var(--muted); color:var(--muted);}
+  .scenario{padding:8px; border-radius:6px; background:var(--glass);}
   .positive{color:var(--good); font-weight:700;}
   .negative{color:var(--bad); font-weight:700;}
-  footer{margin-top:8px; color:var(--muted); font-size:13px;}
-  .inline{display:flex; gap:8px; align-items:center;}
+  footer{margin-top:6px; color:var(--muted); font-size:11px; text-align:center;}
+  .inline{display:flex; gap:6px; align-items:center;}
   input[type="range"]{width:100%;}
-  @media (max-width:520px){
-    .row{flex-direction:column;}
-    .grid{grid-template-columns:1fr;}
-    header{flex-direction:column; align-items:flex-start; gap:4px;}
+  .keyboard{display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-top:10px;}
+  .keyboard button{height:44px; border-radius:6px; border:1px solid rgba(0,0,0,0.1); background:var(--card); font-size:18px; cursor:pointer;}
+  .keyboard button:active{background:var(--accent); color:white;}
+  .keyboard-container{display:none; position:fixed; bottom:0; left:0; right:0; background:var(--card); padding:10px; box-shadow:0 -2px 10px rgba(0,0,0,0.1); z-index:100;}
+  @media (min-width:520px){
+    .wrap{max-width:500px; padding:15px;}
+    .grid{grid-template-columns:1fr 1fr;}
+    .keyboard{display:none;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Калькулятор ожидаемого тотала по темпу</h1>
+    <h1>Калькулятор тотала по темпу</h1>
+    <button class="theme-toggle" id="themeToggle">Светлая тема</button>
     <p>Быстрый прикид для лайв-решения: сравни свой прогноз с линией букмекера.</p>
   </header>
 
   <div class="card">
     <div class="row">
       <div class="col">
-        <label>Длина матча (минут)</label>
+        <label>Длина матча</label>
         <select id="matchLen">
           <option value="48">NBA - 48</option>
           <option value="40">Other - 40</option>
           <option value="custom">Своя...</option>
         </select>
-        <input id="customLen" type="number" min="1" step="1" style="display:none;margin-top:8px" placeholder="Введите минуты (напр. 36)" />
-        <div class="small">Обычно NBA 48, прочие лиги 40.</div>
+        <input id="customLen" type="number" min="1" step="1" style="display:none;margin-top:6px" placeholder="Минуты" inputmode="numeric" />
       </div>
 
       <div class="col">
         <label>Прогресс матча</label>
         <div class="inline">
-          <input id="progressPct" type="number" min="0" max="100" step="0.1" value="30" />
+          <input id="progressPct" type="number" min="0" max="100" step="0.1" value="30" inputmode="decimal" />
           <span class="muted">%</span>
         </div>
-        <div class="small">Можно вводить в % (например 30%)</div>
-      </div>
-
-      <div class="col">
-        <label>Текущий темп (очки / мин)</label>
-        <input id="tempoNow" type="number" step="0.01" value="5.01" />
-      </div>
-
-      <div class="col">
-        <label>Средний темп лиги (очки / мин)</label>
-        <input id="tempoLeague" type="number" step="0.01" value="2.00" />
       </div>
     </div>
-
-    <div style="height:10px"></div>
 
     <div class="row">
       <div class="col">
-        <label>Вес текущего темпа при прогнозе (регрессия к среднему)</label>
-        <div class="inline">
-          <input id="weight" type="range" min="0" max="100" value="50" />
-          <div style="width:56px; text-align:center;" id="wtLabel">50%</div>
-        </div>
-        <div class="small">0% = полностью лиги, 100% = полностью текущий темп</div>
+        <label>Текущий темп (очки/мин)</label>
+        <input id="tempoNow" type="number" step="0.01" value="5.01" inputmode="decimal" />
       </div>
 
       <div class="col">
-        <label>Линия букмекера (тотал)</label>
-        <input id="bookLine" type="number" step="0.1" placeholder="Напр. 190" />
-        <div class="small">Оставь пустым, если хочешь только расчёт</div>
+        <label>Средний темп лиги</label>
+        <input id="tempoLeague" type="number" step="0.01" value="2.00" inputmode="decimal" />
       </div>
     </div>
 
-    <div style="height:12px"></div>
+    <div class="row full-width">
+      <label>Вес текущего темпа</label>
+      <div class="inline">
+        <input id="weight" type="range" min="0" max="100" value="50" />
+        <div style="width:40px; text-align:center; font-size:14px;" id="wtLabel">50%</div>
+      </div>
+      <div class="small">0% = лига, 100% = текущий темп</div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Линия букмекера</label>
+        <input id="bookLine" type="number" step="0.1" placeholder="Напр. 190" inputmode="decimal" />
+      </div>
+    </div>
 
     <div class="row">
       <div class="col">
@@ -116,50 +126,69 @@
         <div class="scenario">
           <div class="muted">Минут сыграно</div>
           <div class="big" id="minsPlayed">—</div>
-          <div class="muted" style="margin-top:8px">Очки сейчас</div>
+          <div class="muted">Очки сейчас</div>
           <div id="pointsNow" class="big">—</div>
-          <div class="muted" style="margin-top:8px">Минут осталось</div>
+          <div class="muted">Минут осталось</div>
           <div id="minsLeft" class="big">—</div>
         </div>
 
         <div class="scenario">
-          <div class="muted">Проекция (оставшиеся минуты × темп)</div>
+          <div class="muted">Проекция (оставшиеся минуты)</div>
           <div class="muted">По текущему темпу</div>
           <div class="big" id="projNow">—</div>
-          <div class="muted" style="margin-top:8px">По среднему темпу</div>
+          <div class="muted">По среднему темпу</div>
           <div class="big" id="projLeague">—</div>
         </div>
 
         <div class="scenario">
-          <div class="muted">Ожидаемый тотал (текущий темп)</div>
+          <div class="muted">Ожидаемый тотал</div>
+          <div class="muted">(текущий темп)</div>
           <div class="big" id="expNow">—</div>
-          <div class="muted" style="margin-top:8px">Ожидаемый тотал (лига)</div>
+          <div class="muted">(лига)</div>
           <div class="big" id="expLeague">—</div>
         </div>
 
         <div class="scenario">
-          <div class="muted">Смешанный прогноз (взвешенный)</div>
+          <div class="muted">Смешанный прогноз</div>
           <div class="big" id="expMixed">—</div>
-          <div class="muted" style="margin-top:8px">Вес текущего темпа</div>
+          <div class="muted">Вес текущего темпа</div>
           <div class="big" id="wtEcho">—</div>
         </div>
       </div>
 
-      <div style="height:10px"></div>
-
-      <div id="bookCompare" class="muted">Линия: —</div>
-
+      <div id="bookCompare" class="muted" style="margin-top:8px; font-size:13px;">Линия: —</div>
     </div>
 
-    <div style="height:10px"></div>
-    <div class="small">Примечание: если текущая эффективность атаки аномальная (очень высокие % попаданий), обычно имеет смысл смягчать прогноз (двигать ползунок в сторону среднего). Этот калькулятор делает быстрые арифметические прикидки — учитывай тренеров, фолы, замены и усталость при принятии решения.</div>
+    <div class="small" style="margin-top:8px;">Примечание: если текущая эффективность аномальная, обычно имеет смысл смягчать прогноз (двигать ползунок в сторону среднего).</div>
   </div>
 
   <footer>Сделано для быстрой оценки. Ответственность за ставки — на вас.</footer>
 </div>
 
+<!-- Кастомная клавиатура -->
+<div class="keyboard-container" id="keyboardContainer">
+  <div class="keyboard">
+    <button data-value="7">7</button>
+    <button data-value="8">8</button>
+    <button data-value="9">9</button>
+    <button data-action="backspace">⌫</button>
+    <button data-value="4">4</button>
+    <button data-value="5">5</button>
+    <button data-value="6">6</button>
+    <button data-action="clear">C</button>
+    <button data-value="1">1</button>
+    <button data-value="2">2</button>
+    <button data-value="3">3</button>
+    <button data-value="0">0</button>
+    <button data-value=".">.</button>
+    <button data-value="-">-</button>
+    <button data-action="hide">Скрыть</button>
+  </div>
+</div>
+
 <script>
 (function(){
+  // Элементы DOM
   const matchLen = document.getElementById('matchLen');
   const customLen = document.getElementById('customLen');
   const progressPct = document.getElementById('progressPct');
@@ -168,7 +197,9 @@
   const weight = document.getElementById('weight');
   const wtLabel = document.getElementById('wtLabel');
   const bookLine = document.getElementById('bookLine');
-
+  const themeToggle = document.getElementById('themeToggle');
+  const keyboardContainer = document.getElementById('keyboardContainer');
+  
   const calcBtn = document.getElementById('calcBtn');
   const copyBtn = document.getElementById('copyBtn');
 
@@ -182,28 +213,52 @@
   const expMixedEl = document.getElementById('expMixed');
   const wtEcho = document.getElementById('wtEcho');
   const bookCompare = document.getElementById('bookCompare');
+  
+  let activeInput = null;
 
+  // Переключение темы
+  function toggleTheme() {
+    document.body.classList.toggle('light-theme');
+    const isLight = document.body.classList.contains('light-theme');
+    themeToggle.textContent = isLight ? 'Тёмная тема' : 'Светлая тема';
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  }
+  
+  themeToggle.addEventListener('click', toggleTheme);
+  
+  // Загрузка темы из localStorage
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-theme');
+    themeToggle.textContent = 'Тёмная тема';
+  }
+
+  // Показать/скрыть поле для ввода кастомной длины матча
   function showCustomToggle(){
     if(matchLen.value === 'custom'){
       customLen.style.display = 'block';
       customLen.value = customLen.value || '';
-    } else customLen.style.display = 'none';
+    } else {
+      customLen.style.display = 'none';
+    }
   }
   matchLen.addEventListener('change', showCustomToggle);
 
+  // Обновление метки ползунка веса
   weight.addEventListener('input', ()=> wtLabel.textContent = weight.value + '%');
 
+  // Функция для преобразования в число
   function num(x){ return Number(x) || 0; }
 
+  // Основная функция расчета
   function calculate(){
-    // read inputs
+    // Получение значений из полей ввода
     let totalMinutes = (matchLen.value === 'custom') ? num(customLen.value) : num(matchLen.value);
     if(totalMinutes <= 0) totalMinutes = 48;
     let progressPercent = num(progressPct.value);
     if(progressPercent < 0) progressPercent = 0;
     if(progressPercent > 100) progressPercent = 100;
 
-    // minutes played
+    // Расчет сыгранных минут
     const minsPlayed = totalMinutes * (progressPercent/100);
     const tNow = num(tempoNow.value);
     const tLeague = num(tempoLeague.value);
@@ -211,23 +266,24 @@
     const ptsNow = tNow * minsPlayed;
     const minsLeft = Math.max(0, totalMinutes - minsPlayed);
 
-    // projections
+    // Проекции
     const projNow = tNow * minsLeft;
     const projLeague = tLeague * minsLeft;
 
-    // expected totals
+    // Ожидаемые тоталы
     const expNow = ptsNow + projNow;
     const expLeague = ptsNow + projLeague;
 
-    // mixed (weighted)
+    // Смешанный прогноз (взвешенный)
     const w = num(weight.value)/100;
     const mixedTempo = tNow * w + tLeague * (1 - w);
     const projMixed = mixedTempo * minsLeft;
     const expMixed = ptsNow + projMixed;
 
-    // display (rounded to 1 decimal)
+    // Округление до 1 знака после запятой
     function r(x){ return Math.round(x*10)/10; }
 
+    // Обновление интерфейса
     minsPlayedEl.textContent = r(minsPlayed) + ' мин';
     pointsNowEl.textContent = r(ptsNow) + ' очк';
     minsLeftEl.textContent = r(minsLeft) + ' мин';
@@ -240,7 +296,7 @@
     expMixedEl.textContent = r(expMixed);
     wtEcho.textContent = Math.round(w*100) + '% (темп=' + r(mixedTempo) + ')';
 
-    // compare with bookmaker line if given
+    // Сравнение с линией букмекера
     const line = num(bookLine.value);
     if(line > 0){
       const diff = r(expMixed - line);
@@ -253,7 +309,7 @@
         verdict = `Линия ${line}. По смешанному прогнозу ≈ ${r(expMixed)} — есть ценность на ТМ (ожидается ${diff} очк ниже).`;
       }
       bookCompare.textContent = verdict;
-      // color hint
+      // Цветовая индикация
       if(diff >= 3) bookCompare.style.color = 'var(--good)';
       else if(diff <= -3) bookCompare.style.color = 'var(--bad)';
       else bookCompare.style.color = 'var(--muted)';
@@ -262,12 +318,13 @@
       bookCompare.style.color = 'var(--muted)';
     }
 
-    // return a small summary text for copying
+    // Возврат текста для копирования
     return `Минут сыграно: ${r(minsPlayed)}; Очки сейчас: ${r(ptsNow)}; Минут осталось: ${r(minsLeft)}.
 Ожидаемый тотал (смешанный): ${r(expMixed)}; (текущий:${r(expNow)}, лига:${r(expLeague)}).
 Линия букмекера: ${line>0?line:'—'}. Разница (mixed - line): ${line>0? r(expMixed-line) : '—'}.`;
   }
 
+  // Обработчики кнопок
   calcBtn.addEventListener('click', ()=>{
     calculate();
   });
@@ -284,21 +341,73 @@
     }
   });
 
-  // initial compute
-  showCustomToggle();
-  calculate();
-
-  // live recalc when inputs change (small debounce)
-  let tmr;
-  ['input','change'].forEach(ev=>{
-    document.querySelectorAll('input,select').forEach(el=>{
-      el.addEventListener(ev, ()=> {
-        clearTimeout(tmr);
-        tmr = setTimeout(calculate, 200);
+  // Кастомная клавиатура
+  function setupKeyboard() {
+    const keyboardButtons = document.querySelectorAll('.keyboard button');
+    
+    keyboardButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        if (!activeInput) return;
+        
+        const action = this.getAttribute('data-action');
+        const value = this.getAttribute('data-value');
+        
+        if (action === 'backspace') {
+          activeInput.value = activeInput.value.slice(0, -1);
+        } else if (action === 'clear') {
+          activeInput.value = '';
+        } else if (action === 'hide') {
+          keyboardContainer.style.display = 'none';
+          activeInput = null;
+        } else if (value) {
+          activeInput.value += value;
+        }
+        
+        // Вызов расчета при изменении значения
+        calculate();
       });
     });
-  });
+    
+    // Показать клавиатуру при фокусе на поле ввода
+    const inputs = document.querySelectorAll('input[type="number"], input[type="text"]');
+    inputs.forEach(input => {
+      input.addEventListener('focus', function() {
+        activeInput = this;
+        if (window.innerWidth < 520) {
+          keyboardContainer.style.display = 'block';
+        }
+      });
+    });
+    
+    // Скрыть клавиатуру при клике вне поля ввода
+    document.addEventListener('click', function(e) {
+      if (!keyboardContainer.contains(e.target) && 
+          !Array.from(inputs).includes(e.target)) {
+        keyboardContainer.style.display = 'none';
+        activeInput = null;
+      }
+    });
+  }
 
+  // Инициализация
+  function init() {
+    showCustomToggle();
+    calculate();
+    setupKeyboard();
+    
+    // Автоматический пересчет при изменении значений
+    let tmr;
+    ['input','change'].forEach(ev=>{
+      document.querySelectorAll('input,select').forEach(el=>{
+        el.addEventListener(ev, ()=> {
+          clearTimeout(tmr);
+          tmr = setTimeout(calculate, 200);
+        });
+      });
+    });
+  }
+
+  init();
 })();
 </script>
 </body>
